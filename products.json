@@ -1,0 +1,74 @@
+[
+    {
+        "id": "1",
+        "name": "Baklava",
+        "category": "Dessert",
+        "price": 3500,
+        "stock": 8,
+        "image": "assets/images/image-baklava-thumbnail.jpg"
+    },
+    {
+        "id": "2",
+        "name": "Brownie",
+        "category": "Dessert",
+        "price": 2500,
+        "stock": 12,
+        "image": "assets/images/image-brownie-thumbnail.jpg"
+    },
+    {
+        "id": "3",
+        "name": "Cake",
+        "category": "Dessert",
+        "price": 6200,
+        "stock": 6,
+        "image": "assets/images/image-cake-thumbnail.jpg"
+    },
+    {
+        "id": "4",
+        "name": "Crème Brûlée",
+        "category": "Dessert",
+        "price": 1200,
+        "stock": 15,
+        "image": "assets/images/image-creme-brulee-thumbnail.jpg"
+    },
+    {
+        "id": "5",
+        "name": "Macaron",
+        "category": "Dessert",
+        "price": 900,
+        "stock": 20,
+        "image": "assets/images/image-macaron-thumbnail.jpg"
+    },
+    {
+        "id": "6",
+        "name": "Meringue",
+        "category": "Dessert",
+        "price": 4200,
+        "stock": 7,
+        "image": "assets/images/image-meringue-thumbnail.jpg"
+    },
+    {
+        "id": "7",
+        "name": "Panna Cotta",
+        "category": "Dessert",
+        "price": 3000,
+        "stock": 10,
+        "image": "assets/images/image-panna-cotta-thumbnail.jpg"
+    },
+    {
+        "id": "8",
+        "name": "Tiramisu",
+        "category": "Dessert",
+        "price": 9800,
+        "stock": 4,
+        "image": "assets/images/image-tiramisu-thumbnail.jpg"
+    },
+    {
+        "id": "9",
+        "name": "Waffle",
+        "category": "Dessert",
+        "price": 15200,
+        "stock": 3,
+        "image": "assets/images/image-waffle-thumbnail.jpg"
+    }
+]
