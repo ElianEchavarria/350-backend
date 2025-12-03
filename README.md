@@ -1,3 +1,38 @@
+## Environment
+
+Set these environment variables on your hosting platform (Render) or in a local `.env` file for development. The backend loads `.env` automatically.
+
+### Email Configuration
+ 
+- `ADMIN_EMAIL`: recipient email for order notifications.
+- `SENDGRID_API_KEY`: if set, emails send via SendGrid HTTPS API (recommended on Render).
+- `SMTP_HOST`: SMTP server host (fallback path).
+- `SMTP_PORT`: SMTP server port (e.g., 587).
+- `SMTP_SECURE`: `tls` or `ssl`.
+- `SMTP_USER`: SMTP username.
+- `SMTP_PASS`: SMTP password.
+- `SMTP_FROM`: From email address (defaults to `SMTP_USER`).
+- `SMTP_FROM_NAME`: From display name (e.g., `Shop`).
+- `SMTP_TIMEOUT`: Optional timeout in seconds (default 8-10).
+
+Notes:
+- Render often blocks outbound SMTP; using `SENDGRID_API_KEY` avoids that by using HTTPS.
+- When `SENDGRID_API_KEY` is present, checkout emails use SendGrid and fall back to SMTP only if the API call fails.
+
+### Quick Email Test
+
+Use `test_email.php` to verify email configuration without placing an order:
+
+Request (POST):
+
+```
+POST /test_email.php
+Content-Type: application/x-www-form-urlencoded
+
+to=your@email.com&subject=Test&text=Hello&html=<p>Hello</p>
+```
+
+Response JSON includes `email_sent`, and `sendgrid_error` or `smtp_error` if delivery fails.
 # PHP Backend
 
 This folder contains a simple PHP backend that provides:
