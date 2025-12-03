@@ -3,7 +3,6 @@
 require __DIR__ . '/cors.php';
 setupCORS();
 header('Content-Type: application/json');
-session_start();
 $_SESSION = [];
 if (ini_get('session.use_cookies')) {
     $params = session_get_cookie_params();

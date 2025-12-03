@@ -1,6 +1,26 @@
 <?php
-// cors.php - centralized CORS handler for all endpoints
+// cors.php - centralized CORS handler and session setup for all endpoints
 function setupCORS() {
+    // Configure session for cross-origin use before starting session
+    if (PHP_VERSION_ID >= 70300) {
+        session_set_cookie_params([
+            'lifetime' => 0,
+            'path' => '/',
+            'domain' => '',
+            'secure' => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on',
+            'httponly' => true,
+            'samesite' => 'None'  // Allow cross-origin cookies
+        ]);
+    } else {
+        // Fallback for older PHP versions
+        ini_set('session.cookie_samesite', 'None');
+        ini_set('session.cookie_secure', isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 1 : 0);
+        ini_set('session.cookie_httponly', 1);
+    }
+    
+    // Start session FIRST before any output
+    session_start();
+    
     $allowedOrigins = [
         // Local development
         'http://localhost',

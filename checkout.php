@@ -28,7 +28,6 @@ if (file_exists($envFile)) {
 // checkout.php - process session cart, update inventory, send email
 setupCORS();
 header('Content-Type: application/json');
-session_start();
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode(['error' => 'Only POST']);

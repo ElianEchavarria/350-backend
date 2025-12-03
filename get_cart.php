@@ -3,7 +3,6 @@
 require __DIR__ . '/cors.php';
 setupCORS();
 header('Content-Type: application/json');
-session_start();
 
 try {
     $db = new PDO('sqlite:' . __DIR__ . '/database.sqlite');
