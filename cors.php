@@ -13,6 +13,7 @@ function setupCORS() {
         
         // Production frontend
         'https://350-frontend-14fwamqln-elianechavarrias-projects.vercel.app',
+        'https://350-frontend-55ix6qa0c-elianechavarrias-projects.vercel.app',
     ];
     
     if (isset($_SERVER['HTTP_ORIGIN'])) {
