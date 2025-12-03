@@ -93,57 +93,101 @@ try {
     $ins->execute([':uid' => $_SESSION['user']['id'], ':name' => $name, ':items' => json_encode($items), ':total' => $total]);
     $db->commit();
 
-    // send email to admin (MAIL_TO env or MAIL_TO in file)
+    // send email to admin (ADMIN_EMAIL from env or admin_email.txt)
     $admin = getenv('ADMIN_EMAIL') ?: trim(file_get_contents(__DIR__ . '/admin_email.txt') ?? "");
     $subject = sprintf("%s ordered items, total $%0.2f", $name, $total/100);
-    $body = "$name ordered the following items:\n";
+    $bodyHtml = sprintf('<p><strong>%s</strong> ordered the following items:</p><ul>', htmlspecialchars($name));
+    $bodyText = "$name ordered the following items:\n";
     foreach ($items as $it) {
-        $body .= sprintf("- %s x%d — $%0.2f\n", $it['name'], $it['qty'], $it['price']/100);
+        $bodyHtml .= sprintf('<li>%s x%d — $%0.2f</li>', htmlspecialchars($it['name']), $it['qty'], $it['price']/100);
+        $bodyText .= sprintf("- %s x%d — $%0.2f\n", $it['name'], $it['qty'], $it['price']/100);
     }
-    $body .= sprintf("Total: $%0.2f\n", $total/100);
+    $bodyHtml .= '</ul>' . sprintf('<p><strong>Total:</strong> $%0.2f</p>', $total/100);
+    $bodyText .= sprintf("Total: $%0.2f\n", $total/100);
 
+    $sent = false;
+    $smtpError = null;
+    $sendgridError = null;
 
-$sent = false;
+    if ($admin) {
+        // Prefer SendGrid HTTPS API if available (Render blocks SMTP egress)
+        $sgKey = getenv('SENDGRID_API_KEY') ?: null;
+        if ($sgKey) {
+            $payload = [
+                'personalizations' => [[
+                    'to' => [[ 'email' => $admin ]],
+                    'subject' => $subject,
+                ]],
+                'from' => [ 'email' => (getenv('SMTP_FROM') ?: 'no-reply@example.com'), 'name' => (getenv('SMTP_FROM_NAME') ?: 'Shop') ],
+                'content' => [
+                    [ 'type' => 'text/plain', 'value' => $bodyText ],
+                    [ 'type' => 'text/html',  'value' => $bodyHtml ],
+                ],
+            ];
+            $ch = curl_init('https://api.sendgrid.com/v3/mail/send');
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Authorization: Bearer ' . $sgKey,
+                'Content-Type: application/json',
+            ]);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+            $response = curl_exec($ch);
+            $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            if ($response === false) {
+                $sendgridError = 'curl_error: ' . curl_error($ch);
+            } elseif ($code >= 200 && $code < 300) {
+                $sent = true;
+            } else {
+                $sendgridError = 'HTTP ' . $code . ' ' . $response;
+            }
+            curl_close($ch);
+            if (!$sent && $sendgridError) {
+                error_log('SendGrid error: ' . $sendgridError);
+            }
+        }
 
-if ($admin) {
-    $mail = new PHPMailer(true);
-    try {
-        $mail->isSMTP();
-        $mail->Host = getenv('SMTP_HOST') ?: 'smtp.gmail.com';
-        $mail->SMTPAuth = true;
-        $mail->Username = getenv('SMTP_USER') ?: 'elianstanly431@gmail.com';
-        $mail->Password = getenv('SMTP_PASS') ?: 'pvdpbhcdqxejmzwo';
-        $mail->SMTPSecure = getenv('SMTP_SECURE') ?: 'tls';
-        $mail->Port = intval(getenv('SMTP_PORT') ?: 587);
-        // Make SMTP resilient on PaaS
-        $mail->Timeout = intval(getenv('SMTP_TIMEOUT') ?: 8); // seconds
-        $mail->SMTPKeepAlive = false;
-        $mail->SMTPDebug = 0;
-        // Optional: relax SSL if provider requires
-        $mail->SMTPOptions = [
-            'ssl' => [
-                'verify_peer' => true,
-                'verify_peer_name' => true,
-                'allow_self_signed' => false,
-            ],
-        ];
+        // Fallback to SMTP if SendGrid not configured or failed
+        if (!$sent) {
+            $mail = new PHPMailer(true);
+            try {
+                $mail->isSMTP();
+                $mail->Host = getenv('SMTP_HOST') ?: 'smtp.gmail.com';
+                $mail->SMTPAuth = true;
+                $mail->Username = getenv('SMTP_USER') ?: '';
+                $mail->Password = getenv('SMTP_PASS') ?: '';
+                $mail->SMTPSecure = getenv('SMTP_SECURE') ?: 'tls';
+                $mail->Port = intval(getenv('SMTP_PORT') ?: 587);
+                $mail->Timeout = intval(getenv('SMTP_TIMEOUT') ?: 8);
+                $mail->SMTPKeepAlive = false;
+                $mail->SMTPDebug = 0;
+                $mail->SMTPOptions = [
+                    'ssl' => [
+                        'verify_peer' => true,
+                        'verify_peer_name' => true,
+                        'allow_self_signed' => false,
+                    ],
+                ];
 
-        // FROM must match SMTP username (or use SMTP_FROM)
-        $from = getenv('SMTP_FROM') ?: $mail->Username;
-        $fromName = getenv('SMTP_FROM_NAME') ?: 'Shop';
-        $mail->setFrom($from, $fromName);
-        $mail->addAddress($admin); // recipient
-        $mail->Subject = $subject;
-        $mail->Body    = $body;
+                $from = getenv('SMTP_FROM') ?: $mail->Username;
+                $fromName = getenv('SMTP_FROM_NAME') ?: 'Shop';
+                $mail->setFrom($from, $fromName);
+                $mail->addAddress($admin);
+                $mail->Subject = $subject;
+                $mail->isHTML(true);
+                $mail->Body = $bodyHtml;
+                $mail->AltBody = $bodyText;
 
-        $mail->send();
-        $sent = true;
-    } catch (Exception $e) {
-        $sent = false;
-        $smtpError = $mail->ErrorInfo ?: $e->getMessage();
-        error_log("PHPMailer error: " . $smtpError);
+                $mail->send();
+                $sent = true;
+            } catch (Exception $e) {
+                $sent = false;
+                $smtpError = $mail->ErrorInfo ?: $e->getMessage();
+                error_log('PHPMailer error: ' . $smtpError);
+            }
+        }
     }
-}
 
 
 
@@ -157,7 +201,9 @@ if ($admin) {
 
     $resp = ['ok' => true, 'email_sent' => (bool)$sent, 'admin' => $admin, 'order_total' => $total];
     if (!$sent) {
-        $resp['smtp_error'] = isset($smtpError) ? $smtpError : 'send failed';
+        if (isset($sendgridError)) $resp['sendgrid_error'] = $sendgridError;
+        if (isset($smtpError)) $resp['smtp_error'] = $smtpError;
+        if (!isset($resp['sendgrid_error']) && !isset($resp['smtp_error'])) $resp['error'] = 'send failed';
     }
     echo json_encode($resp);
 } catch (Exception $e) {
