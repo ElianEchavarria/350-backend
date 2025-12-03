@@ -2,8 +2,15 @@
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
+set_error_handler(function($errno, $errstr, $errfile, $errline) {
+    http_response_code(500);
+    echo json_encode(['error' => 'Server error: ' . $errstr]);
+    exit;
+});
+
 require __DIR__ . '/vendor/autoload.php'; // Composer autoload
 require __DIR__ . '/cors.php';
+setupCORS();
 
 // Load environment variables from .env (simple parser)
 $envFile = __DIR__ . '/.env';
@@ -26,7 +33,6 @@ if (file_exists($envFile)) {
 }
 
 // checkout.php - process session cart, update inventory, send email
-setupCORS();
 header('Content-Type: application/json');
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);

@@ -1,5 +1,11 @@
 <?php
 // add_to_cart.php - stores cart in session and returns enriched cart data
+set_error_handler(function($errno, $errstr, $errfile, $errline) {
+    http_response_code(500);
+    echo json_encode(['error' => 'Server error: ' . $errstr]);
+    exit;
+});
+
 require __DIR__ . '/cors.php';
 setupCORS();
 header('Content-Type: application/json');
