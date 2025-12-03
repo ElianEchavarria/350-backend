@@ -118,7 +118,10 @@ try {
                     'to' => [[ 'email' => $admin ]],
                     'subject' => $subject,
                 ]],
-                'from' => [ 'email' => (getenv('SMTP_FROM') ?: 'no-reply@example.com'), 'name' => (getenv('SMTP_FROM_NAME') ?: 'Shop') ],
+                'from' => [
+                    'email' => (getenv('SENDGRID_FROM') ?: getenv('SMTP_FROM') ?: 'no-reply@example.com'),
+                    'name'  => (getenv('SMTP_FROM_NAME') ?: 'Shop'),
+                ],
                 'content' => [
                     [ 'type' => 'text/plain', 'value' => $bodyText ],
                     [ 'type' => 'text/html',  'value' => $bodyHtml ],

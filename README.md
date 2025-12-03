@@ -6,6 +6,7 @@ Set these environment variables on your hosting platform (Render) or in a local 
  
 - `ADMIN_EMAIL`: recipient email for order notifications.
 - `SENDGRID_API_KEY`: if set, emails send via SendGrid HTTPS API (recommended on Render).
+- `SENDGRID_FROM`: the verified SendGrid sender email (Single Sender or domain-authenticated). Must match SendGrid Sender Identity.
 - `SMTP_HOST`: SMTP server host (fallback path).
 - `SMTP_PORT`: SMTP server port (e.g., 587).
 - `SMTP_SECURE`: `tls` or `ssl`.
@@ -18,6 +19,7 @@ Set these environment variables on your hosting platform (Render) or in a local 
 Notes:
 - Render often blocks outbound SMTP; using `SENDGRID_API_KEY` avoids that by using HTTPS.
 - When `SENDGRID_API_KEY` is present, checkout emails use SendGrid and fall back to SMTP only if the API call fails.
+ - SendGrid requires a verified sender identity. Set `SENDGRID_FROM` to a verified sender (or authenticate your domain), otherwise the API returns 403.
 
 ### Quick Email Test
 
