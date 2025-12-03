@@ -2,9 +2,10 @@
 // cors.php - centralized CORS handler and session setup for all endpoints
 function setupCORS() {
     // Detect if we're on HTTPS (check both direct and reverse proxy)
+    // Render uses X-Forwarded-Proto header
     $isHttps = (
-        (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ||
         (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') ||
+        (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ||
         (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443)
     );
     
@@ -45,20 +46,21 @@ function setupCORS() {
         exit;
     }
     
-    // NOW configure session for cross-origin use BEFORE starting session
+    // Configure session for cross-origin use BEFORE starting session
+    // Must use SameSite=None with Secure for cross-origin cookies
     if (PHP_VERSION_ID >= 70300) {
         session_set_cookie_params([
             'lifetime' => 0,
             'path' => '/',
             'domain' => '',
-            'secure' => $isHttps,
+            'secure' => true,  // Always true for SameSite=None (HTTPS only)
             'httponly' => true,
-            'samesite' => 'Lax'
+            'samesite' => 'None'
         ]);
     } else {
-        // Fallback for older PHP versions
-        ini_set('session.cookie_secure', $isHttps ? 1 : 0);
-        ini_set('session.cookie_httponly', 1);
+        ini_set('session.cookie_secure', '1');
+        ini_set('session.cookie_httponly', '1');
+        ini_set('session.cookie_samesite', 'None');
     }
     
     // Start session FIRST before any output
