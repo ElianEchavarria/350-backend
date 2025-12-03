@@ -1,0 +1,29 @@
+# Ignore Composer vendor directory (do not commit dependencies)
+/vendor/
+
+# Environment files
+.env
+.env.*
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Logs and runtime files
+*.log
+*.cache
+*.sqlite
+
+# Node modules (if present)
+node_modules/
+
+# Composer and build artifacts
+composer.phar
+
+# Backup files
+*.bak
+
+# Docker Compose override
+docker-compose.override.yml
