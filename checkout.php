@@ -140,7 +140,8 @@ if ($admin) {
         $sent = true;
     } catch (Exception $e) {
         $sent = false;
-        error_log("PHPMailer error: " . $mail->ErrorInfo);
+        $smtpError = $mail->ErrorInfo ?: $e->getMessage();
+        error_log("PHPMailer error: " . $smtpError);
     }
 }
 
@@ -154,7 +155,11 @@ if ($admin) {
     // clear cart
     $_SESSION['cart'] = [];
 
-    echo json_encode(['ok' => true, 'email_sent' => (bool)$sent, 'admin' => $admin, 'order_total' => $total]);
+    $resp = ['ok' => true, 'email_sent' => (bool)$sent, 'admin' => $admin, 'order_total' => $total];
+    if (!$sent) {
+        $resp['smtp_error'] = isset($smtpError) ? $smtpError : 'send failed';
+    }
+    echo json_encode($resp);
 } catch (Exception $e) {
     $db->rollBack();
     http_response_code(400);
