@@ -115,6 +115,18 @@ if ($admin) {
         $mail->Password = getenv('SMTP_PASS') ?: 'pvdpbhcdqxejmzwo';
         $mail->SMTPSecure = getenv('SMTP_SECURE') ?: 'tls';
         $mail->Port = intval(getenv('SMTP_PORT') ?: 587);
+        // Make SMTP resilient on PaaS
+        $mail->Timeout = intval(getenv('SMTP_TIMEOUT') ?: 8); // seconds
+        $mail->SMTPKeepAlive = false;
+        $mail->SMTPDebug = 0;
+        // Optional: relax SSL if provider requires
+        $mail->SMTPOptions = [
+            'ssl' => [
+                'verify_peer' => true,
+                'verify_peer_name' => true,
+                'allow_self_signed' => false,
+            ],
+        ];
 
         // FROM must match SMTP username (or use SMTP_FROM)
         $from = getenv('SMTP_FROM') ?: $mail->Username;
@@ -128,7 +140,7 @@ if ($admin) {
         $sent = true;
     } catch (Exception $e) {
         $sent = false;
-        error_log("PHPMailer error: " . $mail->ErrorInfo); // see the real error
+        error_log("PHPMailer error: " . $mail->ErrorInfo);
     }
 }
 
