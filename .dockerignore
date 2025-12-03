@@ -1,0 +1,16 @@
+# Ignore Git metadata
+.git
+
+# Ignore env and local secrets
+.env
+admin_email.txt
+
+# Ignore dependencies and build artifacts
+/vendor
+node_modules
+
+# Editor/temp files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

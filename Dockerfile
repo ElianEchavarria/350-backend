@@ -5,7 +5,7 @@ FROM php:8.2-cli
 WORKDIR /app
 
 # Copy backend files
-COPY backend/ /app
+COPY . /app
 
 # Expose port
 EXPOSE 10000
