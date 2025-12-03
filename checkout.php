@@ -1,16 +1,28 @@
 <?php
+// Ensure CORS headers are sent before anything else
+require __DIR__ . '/cors.php';
+setupCORS();
+
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-set_error_handler(function($errno, $errstr, $errfile, $errline) {
+// Robust error/exception handlers that still return JSON with CORS
+set_exception_handler(function($e) {
+    setupCORS();
+    header('Content-Type: application/json');
     http_response_code(500);
-    echo json_encode(['error' => 'Server error: ' . $errstr]);
+    echo json_encode(['error' => $e->getMessage()]);
+    exit;
+});
+set_error_handler(function($errno, $errstr, $errfile, $errline) {
+    setupCORS();
+    header('Content-Type: application/json');
+    http_response_code(500);
+    echo json_encode(['error' => $errstr]);
     exit;
 });
 
 require __DIR__ . '/vendor/autoload.php'; // Composer autoload
-require __DIR__ . '/cors.php';
-setupCORS();
 
 // Load environment variables from .env (simple parser)
 $envFile = __DIR__ . '/.env';
