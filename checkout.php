@@ -4,6 +4,26 @@ use PHPMailer\PHPMailer\Exception;
 
 require __DIR__ . '/vendor/autoload.php'; // Composer autoload
 
+// Load environment variables from .env (simple parser)
+$envFile = __DIR__ . '/.env';
+if (file_exists($envFile)) {
+    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        $line = trim($line);
+        if ($line === '' || $line[0] === '#') continue;
+        if (strpos($line, '=') === false) continue;
+        list($k, $v) = explode('=', $line, 2);
+        $k = trim($k);
+        $v = trim($v);
+        if (strlen($v) > 1 && (($v[0] === '"' && substr($v, -1) === '"') || ($v[0] === '\'' && substr($v, -1) === '\''))) {
+            $v = substr($v, 1, -1);
+        }
+        putenv("$k=$v");
+        $_ENV[$k] = $v;
+        $_SERVER[$k] = $v;
+    }
+}
+
 // checkout.php - process session cart, update inventory, send email (mail() fallback)
 // Add CORS support for local frontend during development
 if (isset($_SERVER['HTTP_ORIGIN'])) {
@@ -84,15 +104,17 @@ if ($admin) {
     $mail = new PHPMailer(true);
     try {
         $mail->isSMTP();
-        $mail->Host = 'smtp.gmail.com';
+        $mail->Host = getenv('SMTP_HOST') ?: 'smtp.gmail.com';
         $mail->SMTPAuth = true;
-        $mail->Username = 'elianstanly431@gmail.com'; // SMTP account
-        $mail->Password = 'pvdpbhcdqxejmzwo';          // App Password
-        $mail->SMTPSecure = 'tls';
-        $mail->Port = 587;
+        $mail->Username = getenv('SMTP_USER') ?: 'elianstanly431@gmail.com';
+        $mail->Password = getenv('SMTP_PASS') ?: 'pvdpbhcdqxejmzwo';
+        $mail->SMTPSecure = getenv('SMTP_SECURE') ?: 'tls';
+        $mail->Port = intval(getenv('SMTP_PORT') ?: 587);
 
-        // FROM must match SMTP username
-        $mail->setFrom('elianstanly431@gmail.com', 'Shop');
+        // FROM must match SMTP username (or use SMTP_FROM)
+        $from = getenv('SMTP_FROM') ?: $mail->Username;
+        $fromName = getenv('SMTP_FROM_NAME') ?: 'Shop';
+        $mail->setFrom($from, $fromName);
         $mail->addAddress($admin); // recipient
         $mail->Subject = $subject;
         $mail->Body    = $body;
