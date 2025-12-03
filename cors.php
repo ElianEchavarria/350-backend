@@ -11,7 +11,7 @@ function setupCORS() {
     if (isset($_SERVER['HTTP_ORIGIN'])) {
         $origin = $_SERVER['HTTP_ORIGIN'];
 
-        if (in_array($origin, $allowedOrigins)) {
+            if (in_array($origin, $allowedOrigins)) {
             header("Access-Control-Allow-Origin: $origin");
             header("Access-Control-Allow-Credentials: true");
         }
@@ -27,16 +27,15 @@ function setupCORS() {
         exit;
     }
 
-    // Sessions for cross-site cookies
-    session_set_cookie_params([
-        'lifetime' => 0,
-        'path' => '/',
-        'secure' => true,
-        'httponly' => true,
-        'samesite' => 'None'
-    ]);
-
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
-    }
+        // Configure session cookie params only if session not active
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_set_cookie_params([
+                'lifetime' => 0,
+                'path' => '/',
+                'secure' => true,
+                'httponly' => true,
+                'samesite' => 'None'
+            ]);
+            @session_start();
+        }
 }
