@@ -3,6 +3,7 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
 require __DIR__ . '/vendor/autoload.php'; // Composer autoload
+require __DIR__ . '/cors.php';
 
 // Load environment variables from .env (simple parser)
 $envFile = __DIR__ . '/.env';
@@ -24,21 +25,8 @@ if (file_exists($envFile)) {
     }
 }
 
-// checkout.php - process session cart, update inventory, send email (mail() fallback)
-// Add CORS support for local frontend during development
-if (isset($_SERVER['HTTP_ORIGIN'])) {
-    $origin = $_SERVER['HTTP_ORIGIN'];
-    if (preg_match('#^https?://localhost(:[0-9]+)?$#', $origin) || strpos($origin, 'file://') === 0 || $origin === 'null') {
-        header('Access-Control-Allow-Origin: ' . $origin);
-        header('Access-Control-Allow-Credentials: true');
-        header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-        header('Access-Control-Allow-Headers: Content-Type');
-    }
-}
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit;
-}
+// checkout.php - process session cart, update inventory, send email
+setupCORS();
 header('Content-Type: application/json');
 session_start();
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

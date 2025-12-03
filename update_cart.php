@@ -1,5 +1,7 @@
 <?php
 // update_cart.php - update or remove items from session cart
+require __DIR__ . '/cors.php';
+setupCORS();
 header('Content-Type: application/json');
 session_start();
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
