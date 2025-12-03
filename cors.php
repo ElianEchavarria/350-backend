@@ -8,28 +8,7 @@ function setupCORS() {
         (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443)
     );
     
-    // Configure session for cross-origin use BEFORE starting session
-    if (PHP_VERSION_ID >= 70300) {
-        session_set_cookie_params([
-            'lifetime' => 0,
-            'path' => '/',
-            'domain' => '',
-            'secure' => $isHttps,
-            'httponly' => true,
-            'samesite' => 'Lax'  // More permissive than None, works better with credentials
-        ]);
-    } else {
-        // Fallback for older PHP versions
-        ini_set('session.cookie_secure', $isHttps ? 1 : 0);
-        ini_set('session.cookie_httponly', 1);
-        // For older PHP, just use the INI setting
-    }
-    
-    // Start session FIRST before any output
-    if (session_status() === PHP_SESSION_NONE) {
-        @session_start();  // Suppress warnings if session already started
-    }
-    
+    // SEND CORS HEADERS FIRST before anything else
     $allowedOrigins = [
         // Local development
         'http://localhost',
@@ -75,6 +54,27 @@ function setupCORS() {
     if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
         http_response_code(200);
         exit;
+    }
+    
+    // NOW configure session for cross-origin use BEFORE starting session
+    if (PHP_VERSION_ID >= 70300) {
+        session_set_cookie_params([
+            'lifetime' => 0,
+            'path' => '/',
+            'domain' => '',
+            'secure' => $isHttps,
+            'httponly' => true,
+            'samesite' => 'Lax'  // More permissive than None, works better with credentials
+        ]);
+    } else {
+        // Fallback for older PHP versions
+        ini_set('session.cookie_secure', $isHttps ? 1 : 0);
+        ini_set('session.cookie_httponly', 1);
+    }
+    
+    // Start session FIRST before any output
+    if (session_status() === PHP_SESSION_NONE) {
+        @session_start();  // Suppress warnings if session already started
     }
 }
 ?>
