@@ -9,15 +9,34 @@ function setupCORS() {
     );
     
     // SEND CORS HEADERS FIRST before anything else
-    // For debugging / deployment, echo back the incoming Origin so browsers receive CORS headers.
-    // NOTE: This allows any origin that sends a request — restrict to specific origins for production.
+    // Allow specific trusted origins
+    $allowedOrigins = [
+        // Local development
+        'http://localhost',
+        'http://localhost:3000',
+        'http://localhost:5000',
+        'http://localhost:8000',
+        'http://localhost:5173',
+        'file://',
+        'null',
+        
+        // Production frontends
+        'https://350-frontend-14fwamqln-elianechavarrias-projects.vercel.app',
+        'https://350-frontend-55ix6qa0c-elianechavarrias-projects.vercel.app',
+        'https://three50-frontend.onrender.com',
+    ];
+    
     if (isset($_SERVER['HTTP_ORIGIN'])) {
         $origin = $_SERVER['HTTP_ORIGIN'];
-        header('Access-Control-Allow-Origin: ' . $origin);
-        header('Vary: Origin');
-        header('Access-Control-Allow-Credentials: true');
-        header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-        header('Access-Control-Allow-Headers: Content-Type');
+        
+        // Check if origin is in allowed list
+        if (in_array($origin, $allowedOrigins)) {
+            header('Access-Control-Allow-Origin: ' . $origin);
+            header('Vary: Origin');
+            header('Access-Control-Allow-Credentials: true');
+            header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+            header('Access-Control-Allow-Headers: Content-Type');
+        }
     }
     
     // Handle OPTIONS preflight requests
