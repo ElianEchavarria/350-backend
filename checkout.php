@@ -203,6 +203,8 @@ try {
     $_SESSION['cart'] = [];
 
     $resp = ['ok' => true, 'email_sent' => (bool)$sent, 'admin' => $admin, 'order_total' => $total];
+    // Include provider for easier debugging (sendgrid vs smtp)
+    $resp['provider'] = (getenv('SENDGRID_API_KEY') ? 'sendgrid' : 'smtp');
     if (!$sent) {
         if (isset($sendgridError)) $resp['sendgrid_error'] = $sendgridError;
         if (isset($smtpError)) $resp['smtp_error'] = $smtpError;
