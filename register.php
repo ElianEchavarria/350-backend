@@ -17,11 +17,11 @@ if (!$username || !$password) {
     exit;
 }
 
-$db = new PDO('sqlite:' . __DIR__ . '/database.sqlite');
-$db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-$hash = password_hash($password, PASSWORD_DEFAULT);
 try {
+    $db = new PDO('sqlite:' . __DIR__ . '/database.sqlite');
+    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+    $hash = password_hash($password, PASSWORD_DEFAULT);
     $stmt = $db->prepare('INSERT INTO users (username,password_hash) VALUES (:u,:p)');
     $stmt->execute([':u' => $username, ':p' => $hash]);
     $_SESSION['user'] = ['id' => $db->lastInsertId(), 'username' => $username];
@@ -30,8 +30,11 @@ try {
     if (strpos($e->getMessage(), 'UNIQUE') !== false) {
         http_response_code(409);
         echo json_encode(['error' => 'Username already exists']);
+    } else if (strpos($e->getMessage(), 'no such table') !== false) {
+        http_response_code(500);
+        echo json_encode(['error' => 'Database not initialized. Run init_db.php']);
     } else {
         http_response_code(500);
-        echo json_encode(['error' => 'DB error']);
+        echo json_encode(['error' => 'Database error: ' . $e->getMessage()]);
     }
 }
